@@ -75,6 +75,7 @@ fn main() {
             test,
             login,
             create_account,
+            get_account,
             get_all_accounts,
             add_to_list,
             remove_from_list,
