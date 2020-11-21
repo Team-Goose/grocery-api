@@ -5,7 +5,7 @@ use rocket_contrib::databases::{database, diesel::PgConnection};
 use diesel::{Queryable, Insertable};
 use diesel::prelude::*;
 use serde_derive::{Serialize, Deserialize};
-use serde_json;
+pub use serde_json::*;
 
 #[database("postgres")]
 pub struct DbConn(PgConnection);
@@ -80,22 +80,81 @@ pub fn get_account(conn: DbConn, id: i32) -> Json<Account> {
 
 // Adds an item to the list of the user id
 #[get("/list/add/<id>/<product>")]
-pub fn add_to_list(conn: DbConn, id: i32, product: i32) -> bool {
+pub fn add_to_list(conn: DbConn, id: i32, product: i32) -> Json<bool> {
     let acct = account::table
         .filter(account::columns::id.eq(id))
         .get_result(&*conn);
 
     let a: Account = acct.unwrap();
 
-    let map: Vec<i32> = serde_json::from_str(&a.list).expect("deserialize");
+    let mut map: Vec<i32> = serde_json::from_str(&a.list).expect("deserialize");
     map.push(product);
     let l = serde_json::to_string(&map).unwrap();
 
-    diesel::update(
-        account::table.filter(
-            account::columns::id.eq(id)
-        )).set(account::columns::list.eq(l))
-        .get_result(&*conn).unwrap();
+    diesel::update(account::table.filter(account::columns::id.eq(id)))
+        .set(account::columns::list.eq(l))
+        .get_result::<Account>(&*conn)
+        .unwrap();
 
-    true
+    Json(true)
+}
+
+// pops the n'th product in the list array
+#[get("/list/remove/<id>/<n>")]
+pub fn remove_from_list(conn: DbConn, id: i32, n: usize) -> Json<bool> {
+    let acct = account::table
+        .filter(account::columns::id.eq(id))
+        .get_result(&*conn);
+
+    let a: Account = acct.unwrap();
+
+    let mut map: Vec<i32> = serde_json::from_str(&a.list).expect("deserialize");
+    map.remove(n);
+    let l = serde_json::to_string(&map).unwrap();
+
+    diesel::update(account::table.filter(account::columns::id.eq(id)))
+        .set(account::columns::list.eq(l))
+        .get_result::<Account>(&*conn).unwrap();
+
+    Json(true)
+}
+
+// Adds a friend based on the friends db id
+#[get("/friends/add/<id>/<friendid>")]
+pub fn add_friend(conn: DbConn, id: i32, friendid: i32) -> Json<bool> {
+    let acct = account::table
+        .filter(account::columns::id.eq(id))
+        .get_result(&*conn);
+
+    let a: Account = acct.unwrap();
+
+    let mut map: Vec<i32> = serde_json::from_str(&a.list).expect("deserialize");
+    map.push(friendid);
+    let l = serde_json::to_string(&map).unwrap();
+
+    diesel::update(account::table.filter(account::columns::id.eq(id)))
+        .set(account::columns::friends.eq(l))
+        .get_result::<Account>(&*conn).unwrap();
+
+    Json(true)
+}
+
+// pops the n'th friend in the friends list
+#[get("/friends/remove/<id>/<n>")]
+pub fn remove_friend(conn: DbConn, id: i32, n: usize) -> Json<bool> {
+    let acct = account::table
+        .filter(account::columns::id.eq(id))
+        .get_result(&*conn);
+
+    let a: Account = acct.unwrap();
+
+    let mut map: Vec<i32> = serde_json::from_str(&a.list).expect("deserialize");
+    map.remove(n);
+    let l = serde_json::to_string(&map).unwrap();
+
+    diesel::update(account::table.filter(account::columns::id.eq(id)))
+        .set(account::columns::friends.eq(l))
+        .get_result::<Account>(&*conn).unwrap();
+
+    Json(true)
 }
