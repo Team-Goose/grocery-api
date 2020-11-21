@@ -18,7 +18,28 @@ use diesel::{Queryable, Insertable};
 use diesel::prelude::*;
 use diesel_migrations::*;
 use serde_derive::{Serialize, Deserialize};
+use rocket::{Request, Response};
+use rocket::fairing::{Fairing, Info, Kind};
+use rocket::http::Header;
 // use crate::account::serde_json::read::error::string::fmt::run;
+
+pub struct CORS();
+
+impl Fairing for CORS {
+    fn info(&self) -> Info {
+        Info {
+            name: "Add CORS headers to requests",
+            kind: Kind::Response
+        }
+    }
+
+    fn on_response(&self, request: &Request, response: &mut Response) {
+        response.set_header(Header::new("Access-Control-Allow-Origin", "*"));
+        response.set_header(Header::new("Access-Control-Allow-Methods", "POST, GET, PATCH, OPTIONS"));
+        response.set_header(Header::new("Access-Control-Allow-Headers", "*"));
+        response.set_header(Header::new("Access-Control-Allow-Credentials", "true"));
+    }
+}
 
 
 // Tests connection
