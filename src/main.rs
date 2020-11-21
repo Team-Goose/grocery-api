@@ -3,6 +3,9 @@
 #[macro_use]
 extern crate diesel;
 
+#[macro_use]
+extern crate diesel_migrations;
+
 mod schema;
 mod account;
 
@@ -36,13 +39,13 @@ fn test() -> String {
 //         .unwrap())
 // }
 
-embed_migrations!("../migrations");
+// embed_migrations!("../migrations");
 
 fn main() {
-    let db_conn = PgConnection::establish("postgres://rocket:rocket@localhost/rocket")
-        .expect(&format!("Error connecting to {}", "postgres://rocket:rocket@localhost/rocket"));
+    // let db_conn = PgConnection::establish("postgres://rocket:rocket@localhost/rocket")
+    //     .expect(&format!("Error connecting to {}", "postgres://rocket:rocket@localhost/rocket"));
 
-    embedded_migrations::run(&db_conn);    
+    // embedded_migrations::run(&db_conn);    
 
     rocket::ignite()
         .attach(DbConn::fairing())
