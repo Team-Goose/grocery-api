@@ -26,15 +26,39 @@ pub struct NewAccount {
     pass: String,
 }
 
+// Logs in with username and password, returns user id
+#[get("/login/<username>/<pass>")]
+pub fn login(conn: DbConn, username: String, pass: String) -> Json<Account> {
+     let results: Vec<Account> = account::table
+        .filter(account::columns::username.eq(username))
+        .get_results(&*conn)
+        .unwrap();
+
+    let mut out = Json(Account {
+        id: -1,
+        username: String::from("ERROR"),
+        pass: String::from("ERROR"),
+        list: String::from("ERROR"),
+        friends: String::from("ERROR"),
+        isAdmin: false
+    });
+    
+    for a in results {
+        if a.pass.eq(&pass) {
+            out = Json(a);
+        };
+    };
+
+    out
+}
+
 // Creates new account
 #[post("/account/create", data="<new_account>")]
 pub fn create_account(conn: DbConn, new_account: Json<NewAccount>) -> Json<Account> {
-    let result = diesel::insert_into(account::table)
+    Json(diesel::insert_into(account::table)
         .values(&new_account.0)
         .get_result(&*conn)
-        .unwrap();
-
-    Json(result)
+        .unwrap())
 }
 
 // Returns users as JSON
@@ -51,4 +75,16 @@ pub fn get_account(conn: DbConn, id: i32) -> Json<Account> {
         .filter(account::columns::id.eq(id))
         .get_result(&*conn)
         .unwrap())
+}
+
+// Adds an item to the list of the user id
+#[get("/add/<id>/<product>")]
+pub fn add_to_list(conn: DbConn, id: i32, product: i32) -> bool {
+    let a = account::table
+        .filter(account::columns::id.eq(id))
+        .get_result(&*conn)
+        .unwrap()
+
+    false
+    
 }

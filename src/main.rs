@@ -38,6 +38,7 @@ fn main() {
         .attach(DbConn::fairing())
         .mount("/", routes![
             test,
+            login,
             create_account,
             get_all_accounts,
             // account_list,
