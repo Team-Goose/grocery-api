@@ -70,6 +70,7 @@ fn main() {
 
     rocket::ignite()
         .attach(DbConn::fairing())
+        .attach(CORS())
         .mount("/", routes![
             test,
             login,
