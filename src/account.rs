@@ -5,6 +5,7 @@ use rocket_contrib::databases::{database, diesel::PgConnection};
 use diesel::{Queryable, Insertable};
 use diesel::prelude::*;
 use serde_derive::{Serialize, Deserialize};
+use serde_json;
 
 #[database("postgres")]
 pub struct DbConn(PgConnection);
@@ -78,13 +79,23 @@ pub fn get_account(conn: DbConn, id: i32) -> Json<Account> {
 }
 
 // Adds an item to the list of the user id
-#[get("/add/<id>/<product>")]
+#[get("/list/add/<id>/<product>")]
 pub fn add_to_list(conn: DbConn, id: i32, product: i32) -> bool {
-    let a = account::table
+    let acct = account::table
         .filter(account::columns::id.eq(id))
-        .get_result(&*conn)
-        .unwrap()
+        .get_result(&*conn);
 
-    false
-    
+    let a: Account = acct.unwrap();
+
+    let map: Vec<i32> = serde_json::from_str(&a.list).expect("deserialize");
+    map.push(product);
+    let l = serde_json::to_string(&map).unwrap();
+
+    diesel::update(
+        account::table.filter(
+            account::columns::id.eq(id)
+        )).set(account::columns::list.eq(l))
+        .get_result(&*conn).unwrap();
+
+    true
 }
